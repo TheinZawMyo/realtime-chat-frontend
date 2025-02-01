@@ -1,8 +1,8 @@
 <template>
-    <div class="container m-auto bg-gray-100">
-      <NavBar v-if="showNavBar"/>
-      <RouterView/>
-    </div>
+  <div class="container m-auto bg-gray-100">
+    <NavBar v-if="showNavBar" />
+    <RouterView />
+  </div>
 </template>
 
 <script setup>
@@ -14,6 +14,6 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 
 const showNavBar = computed(() => {
-    return !['/messages'].includes(route.path);
+  return !['/messages'].includes(route.path);
 });
 </script>
