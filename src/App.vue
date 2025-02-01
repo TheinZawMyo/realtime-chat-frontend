@@ -1,82 +1,19 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
-    <!-- Sidebar -->
-    <div class="w-1/4 bg-white border-r border-gray-200">
-      <div class="p-4 border-b border-gray-200">
-        <h1 class="text-2xl font-bold">Chat App</h1>
-        <input type="text" placeholder="Search users..." class="w-full mt-4 p-2 border border-gray-300 rounded-lg" />
-      </div>
-      <div class="overflow-y-auto">
-        <div v-for="user in users" :key="user.id" class="p-4 hover:bg-gray-100 cursor-pointer">
-          <div class="flex items-center">
-            <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-            <div class="ml-3">
-              <p class="font-semibold">{{ user.name }}</p>
-              <p class="text-sm text-gray-500">{{ user.lastMessage }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="container m-auto bg-gray-100">
+      <NavBar v-if="showNavBar"/>
+      <RouterView/>
     </div>
-
-    <!-- Main Chat Area -->
-    <div class="flex-1 flex flex-col">
-      <!-- Chat Header -->
-      <div class="p-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold">Chat with {{ selectedUser }}</h2>
-      </div>
-
-      <!-- Messages -->
-      <div class="flex-1 overflow-y-auto p-4">
-        <div v-for="message in messages" :key="message.id"
-          :class="['flex', message.sender === 'me' ? 'justify-end' : 'justify-start']">
-          <div :class="['p-3 rounded-lg max-w-xs', message.sender === 'me' ? 'bg-blue-500 text-white' : 'bg-gray-200']">
-            {{ message.text }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Message Input -->
-      <div class="p-4 border-t border-gray-200">
-        <input type="text" placeholder="Type a message..." class="w-full p-2 border border-gray-300 rounded-lg"
-          v-model="newMessage" @keyup.enter="sendMessage" />
-      </div>
-    </div>
-  </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      users: [
-        { id: 1, name: 'John Doe', lastMessage: 'Hello!' },
-        { id: 2, name: 'Jane Smith', lastMessage: 'How are you?' },
-        { id: 3, name: 'Alice Johnson', lastMessage: 'See you later!' },
-      ],
-      selectedUser: 'John Doe',
-      messages: [
-        { id: 1, sender: 'me', text: 'Hi there!' },
-        { id: 2, sender: 'John Doe', text: 'Hello!' },
-        { id: 3, sender: 'me', text: 'How are you?' },
-      ],
-      newMessage: '',
-    };
-  },
-  methods: {
-    sendMessage() {
-      if (this.newMessage.trim() === '') return;
-      this.messages.push({
-        id: this.messages.length + 1,
-        sender: 'me',
-        text: this.newMessage,
-      });
-      this.newMessage = '';
-    },
-  },
-};
-</script>
+<script setup>
+import { RouterView } from 'vue-router';
+import NavBar from './components/NavBar.vue';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 
-<style>
-/* Additional custom styles can go here */
-</style>
+const route = useRoute();
+
+const showNavBar = computed(() => {
+    return !['/messages'].includes(route.path);
+});
+</script>
