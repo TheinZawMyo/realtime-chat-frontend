@@ -78,5 +78,6 @@ const sendMessage = () => {
         text: newMessage.value,
     });
     newMessage.value = '';
+    
 };
 </script>
