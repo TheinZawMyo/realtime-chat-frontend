@@ -69,6 +69,8 @@ const login = async () => {
     if (Object.keys(errors.value).length === 0) {
         isLoading.value = true;
         try {
+            // await API.get('/sanctum/csrf-cookie');
+
             const response = await API.post("/login", {
                 email: email.value,
                 password: password.value,

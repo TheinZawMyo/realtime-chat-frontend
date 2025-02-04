@@ -10,4 +10,5 @@ import { createPinia } from "pinia";
 const pinia = createPinia();
 const app = createApp(App);
 
+
 app.use(router).use(Toast).use(pinia).mount("#app");

@@ -1,45 +1,17 @@
 <template>
     <div class="flex h-screen bg-gray-100">
         <!-- Sidebar -->
-        <div class="w-1/4 bg-white border-r border-gray-200">
-            <div class="p-4 border-b border-gray-200">
-                <RouterLink to="/" class="text-2xl font-bold">Messaging App</RouterLink>
-                <input type="text" placeholder="Search users for new chat..."
-                    class="w-full mt-4 p-2 border border-gray-300 rounded-lg" />
-            </div>
-            <div class="overflow-y-auto h-[calc(100vh-120px)] custom-scrollbar">
-                <div v-for="user in users" :key="user.id" class="p-4 hover:bg-gray-100 cursor-pointer">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-                        <div class="ml-3">
-                            <p class="font-semibold">{{ user.name }}</p>
-                            <p class="text-sm text-gray-500">{{ user.lastMessage }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="fixed bottom-0 w-1/4">
-                <button class="w-full p-3 bg-red-500 text-white font-semibold">Logout</button>
-            </div>
-        </div>
+        <Sidebar @select-user="selectUser" @search-users="searchUsers" @logout="logout"/>
 
         <!-- Main Chat Area -->
         <div class="flex-1 flex flex-col">
             <!-- Chat Header -->
-            <div class="p-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold">Chat with {{ selectedUser }}</h2>
+            <div class="p-4 border-b border-gray-200" v-if="selectedUser !== null">
+                <h2 class="text-xl font-semibold">Chat with {{ selectedUser?.name }}</h2>
             </div>
 
             <!-- Messages -->
-            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                <div v-for="message in messages" :key="message.id"
-                    :class="['flex', message.sender === 'me' ? 'justify-end' : 'justify-start']">
-                    <div
-                        :class="['p-3 rounded-lg max-w-xs mt-3', message.sender === 'me' ? 'bg-green-500 text-white' : 'bg-gray-200']">
-                        {{ message.text }}
-                    </div>
-                </div>
-            </div>
+            <MessageList :messages="messages" />
 
             <!-- Message Input -->
             <div class="p-4 border-t border-gray-200">
@@ -51,33 +23,68 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '@/store/auth';
+import { useUserStore } from '@/store/userStore';
+import { useMessageStore } from '@/store/messageStore';
+import MessageList from '@/components/MessageList.vue';
+import Sidebar from '@/components/Sidebar.vue';
+import { useRouter } from "vue-router";
+import echo from '@/echo';
 
-const users = ref([
-    { id: 1, name: 'John Doe', lastMessage: 'Hello!' },
-    { id: 2, name: 'Jane Smith', lastMessage: 'How are you?' },
-    { id: 3, name: 'Alice Johnson', lastMessage: 'See you later!' },
-]);
+const authStore = useAuthStore();
+const route = useRouter();
+const userStore = useUserStore();
+const messageStore = useMessageStore();
 
-const selectedUser = ref('John Doe');
-
-const messages = ref([
-    { id: 1, sender: 'me', text: 'Hi there!' },
-    { id: 2, sender: 'John Doe', text: 'Hello!' },
-    { id: 3, sender: 'me', text: 'How are you?' },
-]);
-
+const selectedUser = ref(null);
 const newMessage = ref('');
 
-const sendMessage = () => {
+const messages = computed(() => {
+    return selectedUser.value ? messageStore.messages : [];
+});
+
+
+const sendMessage = async () => {
     if (newMessage.value.trim() === '') return;
-    messages.value.push({
-        id: messages.value.length + 1,
-        sender: 'me',
-        text: newMessage.value,
-    });
+    await messageStore.sendMessage(selectedUser.value.id, newMessage.value);
     newMessage.value = '';
     
 };
+
+
+const selectUser = (user) => {
+    selectedUser.value = user;
+    messageStore.fetchMessages(user?.id);
+}
+
+// Fetch contact users
+onMounted(() => {
+    userStore.getContactUsers();
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    const authUserId = user?.id;
+
+    if (authUserId) {
+        if (selectedUser.value) {
+            messageStore.fetchMessages(selectedUser.value.id);
+        }
+
+        echo.private(`chat.${authUserId}`).listen("MessageEvent", (event) => {
+            console.log('Received message:', event);
+            messageStore.messages.push(event);
+        });
+    }
+});
+
+const searchUsers = (searchQuery) => {
+    userStore.fetchUsers(searchQuery);
+};
+
+
+// ======== logout ==========
+const logout = () => {
+    authStore.logout();
+    route.push('/login');
+}
 </script>
