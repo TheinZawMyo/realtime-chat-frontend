@@ -13,6 +13,7 @@ import { useRoute } from 'vue-router';
 
 const route = useRoute();
 
+
 const showNavBar = computed(() => {
   return !['/messages'].includes(route.path);
 });

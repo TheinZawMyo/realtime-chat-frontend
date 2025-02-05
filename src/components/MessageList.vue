@@ -7,7 +7,7 @@
         <div v-for="message in messages" :key="message.id"
             :class="['flex', message.sender_id === authUser.id ? 'justify-end' : 'justify-start']">
             <div
-                :class="['p-3 rounded-lg max-w-xs mt-3', message.sender_id === authUser.id ? 'bg-green-500 text-white' : 'bg-gray-200']">
+                :class="['p-3 rounded-lg message max-w-xs mt-3', message.sender_id === authUser.id ? 'bg-green-500 text-white' : 'bg-gray-200']">
                 <span :class="['text-xs', message.sender_id === authUser.id ? 'text-white' : 'text-gray-500']">{{ formatDate(message.created_at) }}</span> <br>
                 {{ message.message }}
             </div>

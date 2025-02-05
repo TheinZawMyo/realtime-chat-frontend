@@ -14,7 +14,7 @@
             <MessageList :messages="messages" />
 
             <!-- Message Input -->
-            <div class="p-4 border-t border-gray-200">
+            <div class="p-4 border-t border-gray-200" v-if="selectedUser !== null">
                 <input type="text" placeholder="Type a message..." class="w-full p-2 border border-gray-300 rounded-lg"
                     v-model="newMessage" @keyup.enter="sendMessage" />
             </div>
@@ -30,7 +30,7 @@ import { useMessageStore } from '@/store/messageStore';
 import MessageList from '@/components/MessageList.vue';
 import Sidebar from '@/components/Sidebar.vue';
 import { useRouter } from "vue-router";
-import echo from '@/echo';
+import echoPromise from "@/echo";
 
 const authStore = useAuthStore();
 const route = useRouter();
@@ -58,24 +58,32 @@ const selectUser = (user) => {
     messageStore.fetchMessages(user?.id);
 }
 
-// Fetch contact users
-onMounted(() => {
-    userStore.getContactUsers();
 
+// Fetch contact users
+onMounted(async () => {
+    userStore.getContactUsers();
     const user = JSON.parse(localStorage.getItem("user"));
     const authUserId = user?.id;
 
     if (authUserId) {
-        if (selectedUser.value) {
-            messageStore.fetchMessages(selectedUser.value.id);
-        }
+        try {
+            const echo = await echoPromise;
 
-        echo.private(`chat.${authUserId}`).listen("MessageEvent", (event) => {
-            console.log('Received message:', event);
-            messageStore.messages.push(event);
-        });
+            echo.private(`chat.${authUserId}`).listen("MessageEvent", (event) => {
+                console.log('Received message:', event);
+                if (selectedUser.value) {
+                    messageStore.fetchMessages(selectedUser.value.id);
+                }
+                userStore.getContactUsers();
+            });
+        } catch (error) {
+            console.error("Echo Initialization Failed:", error);
+        }
     }
 });
+
+
+
 
 const searchUsers = (searchQuery) => {
     userStore.fetchUsers(searchQuery);

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import API, { initCsrfToken } from "@/api";
+import API from "@/api";
 
 export const useMessageStore = defineStore("message", {
     state: () => ({
@@ -8,7 +8,6 @@ export const useMessageStore = defineStore("message", {
     actions: {
         async fetchMessages(user_id) {
             try {
-                await initCsrfToken();
                 const response = await API.get(`/get-messages`, {
                     params: {
                         contact_user_id: user_id,
@@ -24,7 +23,6 @@ export const useMessageStore = defineStore("message", {
         async sendMessage(user_id, message) {
             try {
                 const authUser = JSON.parse(localStorage.getItem("user"));
-                await initCsrfToken();
                 const response = await API.post(`/send-message`, {
 					receiver_id: user_id,
 					message: message,

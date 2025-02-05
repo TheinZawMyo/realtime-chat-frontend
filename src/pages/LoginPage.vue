@@ -40,7 +40,7 @@
 import Input from "../components/Input.vue";
 import { RouterLink, useRouter } from "vue-router";
 import { ref } from "vue";
-import API, { initCsrfToken } from "@/api";
+import API from "@/api";
 import { useAuthStore } from "@/store/auth";
 
 import { useToast } from "vue-toastification";
@@ -70,7 +70,6 @@ const login = async () => {
         isLoading.value = true;
         try {
 
-            await initCsrfToken();
             
             const response = await API.post("/login", {
                 email: email.value,
