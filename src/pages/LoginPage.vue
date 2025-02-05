@@ -40,7 +40,7 @@
 import Input from "../components/Input.vue";
 import { RouterLink, useRouter } from "vue-router";
 import { ref } from "vue";
-import API from "@/api";
+import API, { initCsrfToken } from "@/api";
 import { useAuthStore } from "@/store/auth";
 
 import { useToast } from "vue-toastification";
@@ -69,11 +69,14 @@ const login = async () => {
     if (Object.keys(errors.value).length === 0) {
         isLoading.value = true;
         try {
-            // await API.get('/sanctum/csrf-cookie');
 
+            await initCsrfToken();
+            
             const response = await API.post("/login", {
                 email: email.value,
                 password: password.value,
+            }, {
+                withCredentials: true,
             });
 
             // ========== Store the token and user data in the store ==========

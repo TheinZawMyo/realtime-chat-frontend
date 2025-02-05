@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import API from '@/api';
+import API, { initCsrfToken } from '@/api';
 
 export const useUserStore = defineStore("user",{
 	state: () => ({
@@ -14,6 +14,7 @@ export const useUserStore = defineStore("user",{
 			this.loading = true;
 			this.error = null;
 			try {
+				await initCsrfToken();
 				const response = await API.get(`/search-users?name=${search}`);
 				this.users = response.data.users || [];
 			} catch (err) {
@@ -25,7 +26,8 @@ export const useUserStore = defineStore("user",{
         async getUser(id) {
             this.loading = true
             this.error = null;
-            try {
+			try {
+				await initCsrfToken();
                 const response = await API.get(`/user-detail?user_id=${id}`);
                 this.user = response.data.user || {};
             } catch (err) {
@@ -40,6 +42,7 @@ export const useUserStore = defineStore("user",{
 			this.error = null;
 			this.contactUsers = [];
 			try {
+				await initCsrfToken();
 				const response = await API.get("/get-contact-users");
 				if (response && response.data) {
 					this.contactUsers = response.data;

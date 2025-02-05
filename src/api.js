@@ -1,22 +1,57 @@
 import axios from "axios";
 
-// ✅ Use environment variables
 const API = axios.create({
-	baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
+	baseURL: "http://localhost:8000/api",
 	headers: {
-		"Accept": "application/json",
-		"Content-Type": "application/json",
+		Accept: "application/json",
 	},
-	withCredentials: true, 
+	withCredentials: true,
+	withXSRFToken: true,
 });
-await API.get("/sanctum/csrf-cookie");
-// ✅ Automatically include Bearer Token
-API.interceptors.request.use((config) => {
-	const token = localStorage.getItem("token");
-	if (token) {
-		config.headers.Authorization = `Bearer ${token}`;
+
+export async function initCsrfToken() {
+	try {
+		await API.get("/sanctum/csrf-cookie"); 
+		console.log("CSRF cookie initialized");
+	} catch (error) {
+		console.error("Failed to get CSRF cookie:", error);
 	}
-	return config;
-});
+}
+
+API.interceptors.request.use(
+	async (config) => {
+		// Attach Bearer token if available
+		const token = localStorage.getItem("token");
+		if (token) {
+			config.headers.Authorization = `Bearer ${token}`;
+		}
+
+		// Fetch CSRF token from cookies
+		let csrfToken = document.cookie
+			.split("; ")
+			.find((row) => row.startsWith("XSRF-TOKEN="))
+			?.split("=")[1];
+
+		// If CSRF token is missing, fetch it first
+		if (!csrfToken) {
+			console.warn("⚠️ CSRF Token missing, fetching...");
+			await initCsrfToken();
+
+			csrfToken = document.cookie
+				.split("; ")
+				.find((row) => row.startsWith("XSRF-TOKEN="))
+				?.split("=")[1];
+		}
+
+		console.log(csrfToken);
+
+		// Attach CSRF token to request headers
+		config.headers["X-XSRF-TOKEN"] = csrfToken || "";
+		return config;
+	},
+	(error) => {
+		return Promise.reject(error);
+	}
+);
 
 export default API;
